@@ -118,17 +118,17 @@ O = -1
 
 class Board(object):
 
-    def __init__(self, size=3):
-        self.size = size
-        self._board = np.array([BLANK] * (self.size ** 2))
-
+    def __init__(self, shape=(3, 3)):
+        self._board = np.ones(shape) * BLANK
         self._mark_dict = {BLANK: ' ', X: 'X', O: 'O'}
 
     @property
     def blanks(self):
-        temp1 = list(enumerate(self))
-        temp = [i for i, x in temp1 if x == BLANK]
-        return temp
+        return set(np.ravel_multi_index(np.where(self._board == BLANK), self._board.shape))
+
+    @property
+    def size(self):
+        return self._board.size
 
     def __getitem__(self, pos):
         return self._board[pos]
@@ -137,7 +137,7 @@ class Board(object):
         if mark not in [BLANK, X, O]:
             raise ValueError
 
-        self._board[pos] = mark
+        self._board[np.unravel_index(pos, self._board.shape)] = mark
 
     def __repr__(self):
         return str(self._board)
@@ -146,43 +146,38 @@ class Board(object):
         return self.board_string()
 
     def __eq__(self, other):
-        if not isinstance(other, Board):
-            return False
-
         return self._board == other._board
 
     def board_string(self):
-        board_template = '\n' \
-                         '{}│{}│{}\n' \
-                         '─┼─┼─\n' \
-                         '{}│{}│{}\n' \
-                         '─┼─┼─\n' \
-                         '{}│{}│{}\n'
-        ox_board = [self._mark_dict[mark] for mark in self._board]
-        return board_template.format(*ox_board)
+        placeholder_rows = []
+        for row in range(self._board.shape[0]):
+            placeholder_rows.append('|'.join(['{}'] * self._board.shape[1]) + '\n')
+
+        template = '─┼─┼─\n'.join(placeholder_rows)
+        marks = [self._mark_dict[m] for m in np.nditer(self._board)]
+
+        return template.format(*marks)
 
     def is_full(self):
-        return len(self.blanks) == 0
+        return BLANK not in self._board
 
     def is_empty(self):
-        return len(self.blanks) == self.size
+        return (X not in self._board) and (O not in self._board)
 
     def asarray(self):
-        return self._board
+        return np.reshape(self._board, -1)
 
     def has_winner(self):
-        board_2d = np.reshape(np.array(self._board), (self.size, self.size))
-
         # sum of board elements along rows
-        row_sums = list(np.sum(board_2d, 0))
+        row_sums = list(np.sum(self._board, 0))
 
         # sum of board elements along columns
-        col_sums = list(np.sum(board_2d, 1))
+        col_sums = list(np.sum(self._board, 1))
 
         # sum of elements along diagonals
-        diag_sums = [np.sum(np.diag(board_2d)), np.sum(np.diag(np.flip(board_2d, axis=1)))]
+        diag_sums = [np.sum(np.diag(self._board)), np.sum(np.diag(np.flip(self._board, axis=1)))]
 
-        return True in (self.size == np.abs(row_sums + col_sums + diag_sums))
+        return True in (self._board.shape[0] == np.abs(row_sums + col_sums + diag_sums))
 
     def is_draw(self):
         return self.is_full() and not self.has_winner()
