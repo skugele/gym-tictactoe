@@ -1,0 +1,6 @@
+name: gym-rl
+dependencies:
+        - python==3.6
+        - numpy
+        - pip:
+                - gym
