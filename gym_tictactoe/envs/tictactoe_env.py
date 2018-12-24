@@ -37,7 +37,12 @@ class TicTacToeEnv(gym.Env):
     def step(self, action):
 
         reward = 0
-        comment = 'none'
+
+        info = {
+            'board': str(self._board),
+            'done': str(self._done),
+            'comment:': 'none'
+        }
 
         # Check if current state is terminal, if so then return warning
         if self._done:
@@ -49,15 +54,17 @@ class TicTacToeEnv(gym.Env):
                 """
             )
 
-        # Verify valid action (sanity check)
-        assert self.action_space.contains(action), 'Invalid move: ({})'.format(action)
+            info['comment'] = 'post-game action'
+
+            return self._board.asarray(), reward, self._done, info
 
         # Verify legal action -- action compatible with current board
-        if action not in self._board.blanks:
+        elif action not in self._board.blanks:
 
             # TODO: Should this return a negative reward?
             logger.warning('Illegal action: ({})'.format(action))
-            comment = 'illegal action'
+
+            info['comment'] = 'illegal action'
 
         else:
             # update board with player's action
@@ -69,14 +76,14 @@ class TicTacToeEnv(gym.Env):
                 reward = self.win_reward
                 self._done = True
 
-                comment = 'player wins'
+                info['comment'] = 'player wins'
 
             elif self._board.is_full():
 
                 reward = self.draw_reward
                 self._done = True
 
-                comment = 'draw'
+                info['comment'] = 'draw'
 
             # add opponent's action
             else:
@@ -89,13 +96,10 @@ class TicTacToeEnv(gym.Env):
                     reward = self.lose_reward
                     self._done = True
 
-                    comment = 'opponent wins'
+                    info['comment'] = 'opponent wins'
 
-        info = {
-            'board': str(self._board),
-            'done': str(self._done),
-            'comment:': comment
-        }
+        info['board'] = str(self._board)
+        info['done'] = self._done
 
         return self._board.asarray(), reward, self._done, info
 
