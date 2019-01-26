@@ -1,13 +1,9 @@
-import os, subprocess, time, signal
+import logging
 import random
 
 import gym
-from gym import error, spaces
-from gym import utils
-from gym.utils import seeding
 import numpy as np
-
-import logging
+from gym import spaces
 
 logger = logging.getLogger(__name__)
 
