@@ -21,6 +21,7 @@ class TicTacToeEnv(gym.Env):
         self.win_reward = 1
         self.lose_reward = -1
         self.draw_reward = 0
+        self.illegal_move = -0.1
 
         # actions
         self.action_space = spaces.Discrete(self._size ** 2)
@@ -56,10 +57,9 @@ class TicTacToeEnv(gym.Env):
 
         # Verify legal action -- action compatible with current board
         elif action not in self._board.blanks:
-
-            # TODO: Should this return a negative reward?
             logger.warning('Illegal action: ({})'.format(action))
 
+            reward = self.illegal_move
             info['comment'] = 'illegal action'
 
         else:
