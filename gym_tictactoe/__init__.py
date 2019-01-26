@@ -8,5 +8,5 @@ register(
     entry_point='gym_tictactoe.envs:TicTacToeEnv',
     timestep_limit=10,
     reward_threshold=1.0,
-    nondeterministic=False,
+    nondeterministic=True,
 )
